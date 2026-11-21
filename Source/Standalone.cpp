@@ -12,7 +12,8 @@
 namespace {
 void snapshot(const juce::File& file,juce::Component& component){
 #if JUCE_MAC
-    auto image=captureMacNativeView(component);
+    juce::DocumentWindow host("VoxRestore UI verification",juce::Colours::black,0);host.setUsingNativeTitleBar(true);host.setContentNonOwned(&component,true);host.setTopLeftPosition(-4000,-4000);host.setVisible(true);
+    juce::MessageManager::getInstance()->runDispatchLoopUntil(250);auto image=captureMacNativeView(host);host.setVisible(false);host.clearContentComponent();
 #else
     auto image=component.createComponentSnapshot(component.getLocalBounds(),true,1);
 #endif
