@@ -79,8 +79,8 @@ private:
     VoxRestoreUpdater updater;bool updateBusy=false;
     VoxProcessor processor;juce::AudioTransportSource transport;juce::TimeSliceThread readAhead{"VoxRestore playback"};std::unique_ptr<TapeReaderSource> reader;std::unique_ptr<VoxEditor> editor;std::unique_ptr<juce::FileChooser> chooser;std::unique_ptr<juce::PropertiesFile> preferences;juce::File voiceFile;bool loop=false;
 };
-class Window final:public juce::DocumentWindow {
-public:Window():DocumentWindow("VoxRestore",OsTheme::background(juce::Desktop::getInstance().isDarkModeActive()),allButtons){setUsingNativeTitleBar(true);setContentOwned(new Deck,true);setResizable(false,false);setIcon(RasterAssets::get().icon);centreWithSize(getWidth(),getHeight());OsTheme::setNativeFrame(*this,juce::Desktop::getInstance().isDarkModeActive());setVisible(true);}void closeButtonPressed() override{juce::JUCEApplication::getInstance()->systemRequestedQuit();}
+class VoxWindow final:public juce::DocumentWindow {
+public:VoxWindow():DocumentWindow("VoxRestore",OsTheme::background(juce::Desktop::getInstance().isDarkModeActive()),allButtons){setUsingNativeTitleBar(true);setContentOwned(new Deck,true);setResizable(false,false);setIcon(RasterAssets::get().icon);centreWithSize(getWidth(),getHeight());OsTheme::setNativeFrame(*this,juce::Desktop::getInstance().isDarkModeActive());setVisible(true);}void closeButtonPressed() override{juce::JUCEApplication::getInstance()->systemRequestedQuit();}
 };
 class VoxApplication final:public juce::JUCEApplication {
 public:
@@ -101,9 +101,9 @@ public:
             }catch(const std::exception& error){auto* result=new juce::DynamicObject;result->setProperty("passed",false);result->setProperty("error",juce::String(error.what()));report=juce::var(result);setApplicationReturnValue(1);}
             if(!option("--report").isEmpty())juce::File(option("--report")).replaceWithText(juce::JSON::toString(report,true));quit();return;
         }
-        theme=std::make_unique<OsTheme>();window=std::make_unique<Window>();
+        theme=std::make_unique<OsTheme>();window=std::make_unique<VoxWindow>();
     }
     void shutdown() override{window.reset();theme.reset();auto end=juce::Time::getMillisecondCounterHiRes()+2000;while(pendingVoxRestoreCleanups()>0&&juce::Time::getMillisecondCounterHiRes()<end)juce::Thread::sleep(5);}
-private:std::unique_ptr<OsTheme> theme;std::unique_ptr<Window> window;
+private:std::unique_ptr<OsTheme> theme;std::unique_ptr<VoxWindow> window;
 };
 START_JUCE_APPLICATION(VoxApplication)

@@ -53,7 +53,7 @@ void VoxProcessor::getStateInformation(juce::MemoryBlock& dest){auto state=param
 void VoxProcessor::setStateInformation(const void* data,int bytes){if(bytes<0||bytes>1024*1024)return;if(auto xml=getXmlFromBinary(data,bytes))if(xml->hasTagName(params.state.getType())){
     auto state=juce::ValueTree::fromXml(*xml);VoiceProfile p;auto model=state.getChildWithName("VoiceReference");readProfileState(model,p);++mailbox->ticket;
     {const juce::SpinLock::ScopedLockType lock(mailbox->lock);mailbox->reference=p;mailbox->source={};mailbox->label=p.valid()?model["label"].toString().substring(0,256):"NO REFERENCE LOADED";mailbox->ready.store(p.valid());++mailbox->revision;}
-    params.replaceState(state);referenceFile={};const juce::ScopedLock lock(statusLock);status=p.valid()?"REFERENCE RESTORED / ORIGINAL FILE NOT REQUIRED":"FREE RESTORATION / LOAD A CLEAN REFERENCE";
+    params.replaceState(state);referenceFile=juce::File{};const juce::ScopedLock lock(statusLock);status=p.valid()?"REFERENCE RESTORED / ORIGINAL FILE NOT REQUIRED":"FREE RESTORATION / LOAD A CLEAN REFERENCE";
 }}
 void VoxProcessor::beginAnalysis(const juce::File& file,bool reference){
     if(busy.exchange(true))return;auto state=std::make_shared<JobState>();state->ticket=++mailbox->ticket;activeJob=state;progress.store(0);auto shared=mailbox;int delay=testDelay.exchange(0);
@@ -69,7 +69,7 @@ void VoxProcessor::beginAnalysis(const juce::File& file,bool reference){
 void VoxProcessor::loadReference(const juce::File& file){beginAnalysis(file,true);}
 void VoxProcessor::analyseSource(const juce::File& file){beginAnalysis(file,false);}
 void VoxProcessor::reanalyseReference(){if(referenceFile.existsAsFile())loadReference(referenceFile);}
-void VoxProcessor::clearReference(){if(activeJob)activeJob->cancel.store(true);++mailbox->ticket;params.getParameter("reference")->setValueNotifyingHost(0);{const juce::SpinLock::ScopedLockType lock(mailbox->lock);mailbox->reference={};mailbox->label="NO REFERENCE LOADED";mailbox->ready.store(false);++mailbox->revision;}referenceFile={};const juce::ScopedLock lock(statusLock);status="REFERENCE CLEARED / FREE RESTORATION";}
+void VoxProcessor::clearReference(){if(activeJob)activeJob->cancel.store(true);++mailbox->ticket;params.getParameter("reference")->setValueNotifyingHost(0);{const juce::SpinLock::ScopedLockType lock(mailbox->lock);mailbox->reference={};mailbox->label="NO REFERENCE LOADED";mailbox->ready.store(false);++mailbox->revision;}referenceFile=juce::File{};const juce::ScopedLock lock(statusLock);status="REFERENCE CLEARED / FREE RESTORATION";}
 void VoxProcessor::serviceJobs(){auto state=activeJob;if(!state)return;progress.store(state->progress.load());if(!state->finished.load(std::memory_order_acquire))return;if(state->ticket==mailbox->ticket.load()){const juce::ScopedLock lock(statusLock);status=state->message;}activeJob.reset();busy.store(false);}
 void VoxProcessor::exportVoice(const juce::File& input,const juce::File& output){
     if(busy.exchange(true))return;auto state=std::make_shared<JobState>();state->ticket=++mailbox->ticket;activeJob=state;progress.store(0);auto profile=referenceSnapshot();auto settings=controls();
