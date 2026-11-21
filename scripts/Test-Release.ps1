@@ -5,6 +5,7 @@ $Build=[IO.Path]::GetFullPath($Build)
 $app=Join-Path $Build 'VoxRestoreApp_artefacts/Release/VoxRestore.exe'
 $plugin=Join-Path $Build 'VoxRestore_artefacts/Release/VST3/VoxRestore.vst3'
 $folder=Join-Path $Build 'verification'
+& (Join-Path $PSScriptRoot 'Test-Teardown.ps1') -Build $Build
 $null=New-Item -ItemType Directory -Path $folder -Force
 $reference=Join-Path $root 'resources/tests/clean-reference.wav'
 $voice=Join-Path $root 'resources/tests/clean-evaluation.wav'

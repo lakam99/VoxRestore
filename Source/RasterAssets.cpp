@@ -5,7 +5,12 @@ namespace {
 juce::Image png(const char* data,int size) {
     auto image=juce::ImageCache::getFromMemory(data,size);
     if(!image.isValid())throw std::runtime_error("Embedded raster skin could not be decoded.");
-    return image;
+    // Static GPU images can recreate Direct3D resources during DLL detach,
+    // under the Windows loader lock. Retain only CPU-backed raster assets.
+    auto software=juce::SoftwareImageType{}.convert(image);
+    image=juce::Image{};
+    juce::ImageCache::releaseUnusedImages();
+    return software;
 }
 
 // Ignore isolated alpha/color specks, while retaining the antialiased edge of

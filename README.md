@@ -28,6 +28,11 @@ Audio and reference analysis run locally, without an account, cloud inference or
 
 ## Verification and limits
 
+Version 0.1.1 fixes a reproduced Direct3D deadlock when unloading the last Windows
+plugin instance after editor use. Skin and VFD images use CPU-backed storage, with
+software editor rendering. Windows release checks now include repeated project closures
+with eight instances and complete module unloading. See [release notes](docs/Release-0.1.1.md).
+
 The native suite covers 44.1/48/96 kHz timing, neutral/bypass alignment, stereo phase, finite audio, no generated sound on silence, compact-profile validation, loaded-state restoration, reference completion with the editor closed, manual whole-file re-analysis, canceled-job retirement, source-safe sample-aligned export and 16 real VST3 add/restore/remove cycles. Actual rendered UI captures are reviewed across all three raster skins. Pipeline checks cover Windows and Apple Silicon, installer rollback, update policies, progress reporting and source/archive secret scans.
 
 The supplied demonstration uses locally synthesized speech: a cleaner reference and a different held-out utterance, deliberately damaged with changing spectral holes, filtering and compression. Its numeric comparison measures that controlled example, not perceptual quality on every recording. Real heavily damaged dialogue still requires auditioning. Completely missing phonemes, clipping, overlapping voices and strong reverberation are outside reliable reconstruction.

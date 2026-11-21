@@ -13,6 +13,8 @@ struct HardwareLook final:juce::LookAndFeel_V4 {
 class VoxEditor final:public juce::AudioProcessorEditor,public juce::FileDragAndDropTarget,private juce::Timer,private juce::DarkModeSettingListener {
 public:
     explicit VoxEditor(VoxProcessor&);~VoxEditor() override;
+    void parentHierarchyChanged() override {if(auto* peer=getPeer())peer->setCurrentRenderingEngine(0);}
+    void visibilityChanged() override {if(auto* peer=getPeer())peer->setCurrentRenderingEngine(0);}
     void paint(juce::Graphics&) override;void resized() override;
     bool isInterestedInFileDrag(const juce::StringArray& files) override{return files.size()==1&&!processor.busy.load();}
     void filesDropped(const juce::StringArray& files,int,int) override{if(isInterestedInFileDrag(files))processor.loadReference(juce::File(files[0]));}

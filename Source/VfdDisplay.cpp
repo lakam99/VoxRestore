@@ -38,7 +38,7 @@ void VfdLine::draw(juce::Graphics& g,const juce::String& source,juce::Rectangle<
     auto text=source.toUpperCase().substring(0,1024);
     if(text!=cachedText||pitch!=cachedPitch||!phosphor.isValid()) {
         cachedText=text;cachedPitch=pitch;changedAt=juce::Time::getMillisecondCounterHiRes();
-        phosphor=juce::Image(juce::Image::ARGB,std::max(1,(int)std::ceil((text.length()*6+2)*pitch)),(int)std::ceil(9*pitch),true);
+        phosphor=juce::Image(juce::Image::ARGB,std::max(1,(int)std::ceil((text.length()*6+2)*pitch)),(int)std::ceil(9*pitch),true,juce::SoftwareImageType{});
         juce::Graphics light(phosphor);
         bool native=false;for(auto c:text)if(!letters.count(c)){native=true;break;}
         if(native) {

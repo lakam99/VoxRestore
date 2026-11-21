@@ -12,9 +12,9 @@ shutil.copytree(build/'VoxRestore_artefacts/Release/VST3/VoxRestore.vst3',stage/
 for name in ('Install-VoxRestore.ps1','Release-Common.ps1'):shutil.copy2(root/'scripts'/name,stage/name)
 shutil.copytree(root/'Licenses',stage/'Licenses');shutil.copytree(root/'resources/generated',stage/'Artwork')
 shutil.copy2(root/'README.md',stage/'README.md');shutil.copy2(root/'docs/Windows-user-guide.txt',stage/'README.txt')
-for source in (build/'verification').glob('*'):
-    if source.suffix not in ('.json','.png'):continue
-    dest=stage/('Previews' if source.suffix=='.png' else 'Verification')/source.name;dest.parent.mkdir(exist_ok=True);shutil.copy2(source,dest)
+for source in (build/'verification').rglob('*'):
+    if not source.is_file() or source.suffix not in ('.json','.png','.log'):continue
+    dest=stage/('Previews' if source.suffix=='.png' else 'Verification')/source.relative_to(build/'verification');dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,dest)
 digest=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 manifest={'schema':1,'product':'audio.arkam.voxrestore','repository':'lakam99/VoxRestore','version':version,'platform':'windows-x64','files':{}}
 for directory in ('Standalone','VST3'):
