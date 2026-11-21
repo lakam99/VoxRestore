@@ -1,0 +1,64 @@
+VOXRESTORE 0.1.0 - WINDOWS x64
+
+Purpose: improve watery/robotic human voice after heavy denoising/compression.
+This is reference-guided DSP with limited input-derived harmonic reconstruction.
+It cannot recreate completely removed words or phonemes.
+
+QUICK START
+1. Run Install-VoxRestore.ps1, then restart/rescan your DAW.
+2. Insert VoxRestore on the damaged dialogue track.
+3. LOAD REF: choose a cleaner 5-20 second sample of the SAME speaker.
+   Analysis starts automatically and covers the whole file. Different words
+   are fine. Only compact speech statistics are saved with the DAW project.
+4. MATCH uses that reference; FREE keeps repair without reference matching.
+5. Compare with BYPASS and MIX. Lower DEWATER if detail softens; lower REBUILD
+   if the result gets buzzy. Missing speech content cannot be invented reliably.
+
+CONTROLS
+RESTORE    Reference-guided spectral balance and gentle dynamic-contour repair.
+DEWATER    Repair brief spectral holes and soften isolated watery artifacts.
+REBUILD    Bounded upper harmonics derived from the input voice, following pitch.
+MIX        Latency-aligned dry/restored blend.
+OUTPUT     -12 to +12 dB trim. True bypass ignores output trim.
+LEARN      Manually re-analyze the ENTIRE reference file.
+CLEAR      Remove the saved reference profile.
+FACEPLATE  Ivory, Graphite or Walnut; appearance does not change audio character.
+
+The middle meter estimates spectral repair activity in percent. It is not a
+certified VU/loudness meter. All changing values, names and progress use the VFD.
+The standalone window/dialog theme follows Windows; hosted window chrome is
+controlled by the DAW. The artwork is generated raster PNG, not SVG.
+
+STANDALONE
+LOAD VOICE opens the damaged recording and automatically scans its whole length.
+Play/pause, stop-and-rewind, return-to-beginning and loop use icon buttons.
+PATCH BAY selects the audio output; microphone input is off by default.
+PRINT WAV re-analyzes the source and renders a NEW restored copy. Length, rate,
+mono/stereo layout and supported WAV depth/metadata are retained. The rendering
+delay is removed. Original files and existing output files cannot be overwritten.
+Reference statistics and controls are remembered without needing the old file.
+
+INSTALL/UPDATE
+Standalone: %LOCALAPPDATA%\Programs\VoxRestore
+VST3: %LOCALAPPDATA%\Programs\Common\VST3\VoxRestore.vst3
+Keep the entire VST3 bundle and runtime DLLs intact. This is separate from NoiseBase.
+The installer checks ownership, payload hashes, downgrade policy and loaded-file
+locks. It keeps the prior version outside the VST scan folder and rolls back
+failed swaps. Close VoxRestore and DAWs using it before updating.
+UPDATES checks the product's GitHub Releases. Downloads have byte-based progress
+and must match GitHub digest, checksum file and all payload hashes. Automatic
+checks can be disabled. The VST3 never installs updates inside a running DAW.
+Use Windows Installed Apps to uninstall; recordings/settings are preserved.
+
+LOCAL PROCESSING / LIMITS
+No audio upload, cloud inference, account or API key. Neural speech detection
+is used in background FILE analysis; the live audio callback never waits for it.
+Voice profiles are statistical, not recordings of the reference. Input words,
+timing and pitch drive reconstruction. Live VST processing only sees audio the
+DAW delivers, not the future timeline. Use one reference/instance per speaker.
+Strong processing can soften detail or add buzz. Audition actual dialogue.
+Latency: 2048 samples at 44.1/48 kHz, 4096 at 96 kHz; file export compensates it.
+Native stress-host results do not certify a particular DAW or physical device.
+
+Complete corresponding AGPL source and dependencies are included in
+VoxRestore-source.zip. Preserve Licenses and third-party notices.

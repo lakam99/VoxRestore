@@ -1,0 +1,132 @@
+name: Windows and Apple Silicon release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: voxrestore-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned secret scanner
+        shell: pwsh
+        run: |
+          $tools = Join-Path $env:RUNNER_TEMP 'gitleaks'
+          New-Item -ItemType Directory -Path $tools -Force | Out-Null
+          $archive = Join-Path $tools 'gitleaks.zip'
+          Invoke-WebRequest 'https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip' -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne 'D29144DEFF3A68AA93CED33DDDF84B7FDC26070ADD4AA0F4513094C8332AFC4E') {throw 'Scanner checksum mismatch.'}
+          Expand-Archive -LiteralPath $archive -DestinationPath $tools
+          $tools >> $env:GITHUB_PATH
+      - name: Scan source and reachable history
+        shell: pwsh
+        run: |
+          ./scripts/Check-Publication.ps1
+          gitleaks git . --log-opts=--all --ignore-gitleaks-allow --redact=100 --no-banner
+          if ($LASTEXITCODE -ne 0) {throw 'History secret scan failed.'}
+      - name: Build Windows x64 VST3 and standalone
+        shell: pwsh
+        run: ./Build-source.ps1
+      - name: Verify audio engine and native workflows
+        shell: pwsh
+        run: ./scripts/Test-Release.ps1
+      - name: Package release
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF.StartsWith('refs/tags/')) {
+            python scripts/Package-Release.py --tag $env:GITHUB_REF_NAME
+          } else {
+            python scripts/Package-Release.py
+          }
+          if ($LASTEXITCODE -ne 0) {throw 'Packaging failed.'}
+      - name: Test installer, rollback, and update validation
+        shell: powershell
+        run: ./scripts/Test-Updates.ps1 -PackageRoot ./dist/VoxRestore
+      - name: Scan packages and nested source archives
+        shell: pwsh
+        run: ./scripts/Check-Publication.ps1 -Artifacts ./dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: VoxRestore-Windows-x64
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+  mac:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Build native Apple Silicon app and VST3
+        run: |
+          test "$(uname -m)" = arm64
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -gline-tables-only"
+          cmake --build build --target VoxRestore_VST3 VoxRestoreApp --parallel 3
+      - name: Verify native Mac audio and bundles
+        run: python3 scripts/Test-Mac.py
+      - name: Preserve Mac verification diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: VoxRestore-Mac-diagnostics
+          path: |
+            build/verification-mac/
+            ~/Library/Logs/DiagnosticReports/VoxRestore*
+          if-no-files-found: warn
+      - name: Package Mac release
+        run: python3 scripts/Package-Mac.py
+      - name: Scan Mac package with pinned scanner
+        run: |
+          curl --fail --location --silent --show-error -o "$RUNNER_TEMP/gitleaks.tar.gz" https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz
+          echo "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5  $RUNNER_TEMP/gitleaks.tar.gz" | shasum -a 256 -c -
+          mkdir "$RUNNER_TEMP/gitleaks"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks"
+          "$RUNNER_TEMP/gitleaks/gitleaks" dir dist-mac --max-archive-depth 3 --ignore-gitleaks-allow --redact=100 --no-banner
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: VoxRestore-macOS-arm64
+          path: |
+            dist-mac/*.zip
+            dist-mac/SHA256SUMS-mac.txt
+          if-no-files-found: error
+          retention-days: 14
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build, mac]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: VoxRestore-Windows-x64
+          path: release-assets
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: VoxRestore-macOS-arm64
+          path: release-assets
+      - name: Combine platform checksums
+        run: cat release-assets/SHA256SUMS-mac.txt >> release-assets/SHA256SUMS.txt
+      - name: Upload, verify, and publish stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python scripts/Publish-Release.py --tag "$RELEASE_TAG" --directory release-assets

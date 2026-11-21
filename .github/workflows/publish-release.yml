@@ -1,0 +1,75 @@
+name: Resume verified release publication
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Stable version tag to publish
+        required: true
+        type: string
+      run_id:
+        description: Original release workflow run with a successful build job
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: voxrestore-publication-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify the build run belongs to this tag and repository
+        id: verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          BUILD_RUN: ${{ inputs.run_id }}
+        run: |
+          python - <<'PY'
+          import json,os,re,subprocess
+          tag=os.environ['RELEASE_TAG'];run_id=os.environ['BUILD_RUN']
+          assert re.fullmatch(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)',tag)
+          assert re.fullmatch(r'[1-9][0-9]*',run_id)
+          def api(path):return json.loads(subprocess.check_output(['gh','api','repos/lakam99/VoxRestore/'+path],text=True))
+          ref=api('git/ref/tags/'+tag)['object']
+          while ref['type']=='tag':ref=api('git/tags/'+ref['sha'])['object']
+          run=api('actions/runs/'+run_id)
+          assert run['head_sha']==ref['sha'] and run['event']=='push'
+          assert run['path']=='.github/workflows/release.yml'
+          assert run['head_repository']['full_name']=='lakam99/VoxRestore'
+          jobs=api('actions/runs/'+run_id+'/jobs')['jobs']
+          assert any(job['name']=='build' and job['conclusion']=='success' for job in jobs)
+          assert any(job['name']=='mac' and job['conclusion']=='success' for job in jobs)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('mac=true\n')
+          print('Verified successful build for '+tag+' at '+ref['sha'])
+          PY
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: VoxRestore-Windows-x64
+          path: release-assets
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        if: steps.verify.outputs.mac == 'true'
+        with:
+          name: VoxRestore-macOS-arm64
+          path: release-assets
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Combine platform checksums
+        if: steps.verify.outputs.mac == 'true'
+        run: cat release-assets/SHA256SUMS-mac.txt >> release-assets/SHA256SUMS.txt
+      - name: Upload, verify, and publish the existing build
+        # Both platforms must be verified for this exact tagged commit.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python scripts/Publish-Release.py --tag "$RELEASE_TAG" --directory release-assets

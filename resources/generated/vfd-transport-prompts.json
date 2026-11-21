@@ -1,0 +1,16 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "Production VFD glass and transport sprites",
+  "assets": [
+    {
+      "name": "vfd",
+      "prompt": "Use case: ui-mockup. Asset type: production raster texture for a working vintage audio plug-in, not a complete interface mockup. Generate one front-on orthographic photograph of a BLANK classic vacuum fluorescent display window from a premium 1980s studio tape deck. Wide 3:1 rectangle, dark charcoal anodized-metal thin recessed bezel, smoked deep blue-green glass covering the entire inner window, very subtle upper-left soft studio reflection and faint green-teal interior tint. Sophisticated physical material detail matching photographed black bakelite buttons and champagne/walnut or graphite studio rack panels. Bezel thin and uniform; roughly 3 percent inset on left/right and 7 percent on top/bottom. This texture will be nine-slice resized to long thin display apertures, so keep borders straight and corners simple and keep central glass very dark, even and uncluttered. CRITICAL: absolutely no text, letters, numbers, lit segments, icons, scale, screws, wires, control buttons or decorative details. All illumination and changing text are live app overlays. Entire outer canvas transparent, only the single display window and slim bezel visible, tightly framed with about 2 percent transparent margin. No SVG/vector/illustration appearance, no perspective, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "name": "transport",
+      "prompt": "Use case: ui-mockup. Asset type: production PNG sprite atlas of photographed transport buttons for a working analog-style audio app. Exactly SIX equal-size front-on black bakelite pushbuttons with thin brushed-silver rims, arranged in a perfectly regular 3-column by 2-row grid on genuine transparent background. Equal cells, identical button geometry and scale, centered in each cell, isolated with generous equal transparent margins. Every cap is a landscape rectangle about 1.7:1 with modest rounded corners and realistic shallow beveled depth; soft upper-left studio light, dark almost black cap, ivory printed symbol. Match premium 1980s studio hardware. NO perspective. Symbols are clear simple standard transport symbols centered on cap: TOP LEFT a right-pointing PLAY triangle; TOP MIDDLE two vertical PAUSE bars; TOP RIGHT one solid STOP square. BOTTOM LEFT LOOP: two curved arrows forming a horizontal oval repeat-cycle, NO number; BOTTOM MIDDLE RETURN TO START: one vertical bar on the LEFT followed by two left-pointing triangles, standard skip-to-beginning symbol; BOTTOM RIGHT a completely BLANK cap, no symbol. All symbols ivory, opaque, bold, recognizable when reduced to a 50 by 32 pixel button. Keep all rims stationary and consistent, six separate non-touching objects. No words, letters, captions, ticks, screws, lamps or additional controls anywhere. Photographic hardware, not SVG, not vector drawing, no watermark.",
+      "transparent_background": true
+    }
+  ]
+}

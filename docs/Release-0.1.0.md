@@ -1,0 +1,11 @@
+First VoxRestore preview: a separate reference-guided VST3/standalone for watery or robotic speech after heavy processing.
+
+- Automatic whole-file clean-reference analysis, with LEARN as explicit full re-analysis. Profiles publish safely while the editor is closed and restore from DAW state without the reference file. Live source statistics adapt continuously; standalone preview/export analyzes the full damaged recording.
+- Broad speech-envelope matching and gentle dynamic contour repair, observed-phase continuation of brief harmonic gaps, isolated-artifact softening and bounded input-derived harmonic reconstruction. Adjustable RESTORE, DEWATER, REBUILD, MIX and output trim; original words/timing/pitch drive processing.
+- Generated Ivory/Graphite/Walnut PNG skins, real controls/meters, sharper cyan VFD live text/progress, OS-theme window chrome, app icon and standalone icon transports.
+- Worker-owned file/neural analysis, POD profile handoff with audio-thread try-lock, cancellation generations, safe deferred cleanup, source-safe sample-aligned WAV export, compact validated state, preallocated live DSP and silent-input fast paths.
+- Separate product/plug-in identity, verified per-user installer, rollback/downgrade/in-use protections, backups outside the VST scan folder, progress-aware verified updates and pinned Windows/Apple Silicon release jobs with source/history/nested-archive secret scans.
+
+Native checks cover 44.1/48/96 kHz neutral/bypass/stereo/silence behavior, delayed active analysis removal, editor-closed reference publication, saved-profile restoration, whole-file re-analysis, canceled-job invalidation, monotonic progress, source-preserving export and 16 real VST3 create/restore/remove cycles. A visual critic reviewed all three rendered skins. The controlled demonstration uses different locally synthesized utterances for reference and evaluation; its scores are not a perceptual guarantee for real dialogue.
+
+This is restorative DSP, not exact recovery of missing speech. Completely removed phonemes, clipping, overlapping voices and strong reverberation remain outside reliable reconstruction. Excessive DEWATER can soften detail; excessive REBUILD can buzz. Start gently and audition. No user film recordings are included in the fixtures or source.

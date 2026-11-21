@@ -1,0 +1,30 @@
+VOXRESTORE - APPLE SILICON
+Requires macOS 14+ and a native arm64 DAW. No Intel/AU target is included.
+
+Extract the Mac package; copy VoxRestore.app to Applications and the complete
+VoxRestore.vst3 bundle to ~/Library/Audio/Plug-Ins/VST3. Close the app/DAW before
+replacing it. Bundles are ad-hoc signed, without Developer ID/notarization.
+Apple's opening guidance: https://support.apple.com/en-us/102445
+
+Insert VoxRestore on damaged dialogue. LOAD REF (or drop a file) automatically
+analyzes the whole cleaner sample. Use the same speaker and similar delivery;
+different words are fine. MATCH guides tone/dynamics; FREE bypasses reference
+matching. LEARN re-analyzes the whole file. CLEAR removes the stored profile.
+
+RESTORE controls matching, DEWATER brief spectral-gap/artifact repair, REBUILD
+input-derived harmonic reconstruction, and MIX the aligned dry/restored blend.
+Lower DEWATER if consonants soften; lower REBUILD if it buzzes. Completely lost
+speech cannot be reliably recovered. Use one reference/instance per speaker.
+
+Standalone LOAD VOICE auto-analyzes the damaged track. Icon transports audition
+it; PRINT WAV produces a source-safe, sample-aligned restored copy. The reference
+statistics are saved without requiring the original file. No reference waveform
+or user audio is uploaded or saved inside the profile. Processing runs locally.
+
+UPDATES opens GitHub Releases for manual Mac installation. Windows' PowerShell
+installer is not used. The live VST3 does not access the network for updates.
+Latency is 2048 samples at 44.1/48 kHz and 4096 at 96 kHz; export removes it.
+
+The release pipeline requires native arm64 DSP, VST3, profile/export, raster UI
+and signature checks before publishing. This does not certify your DAW/hardware.
+See the included AGPL source, generated-artwork prompts and third-party notices.
