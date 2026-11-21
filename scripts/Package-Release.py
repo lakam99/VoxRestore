@@ -25,6 +25,9 @@ source=out/f'VoxRestore-{version}-source.zip'
 tracked=subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
 required={'CMakeLists.txt','Source/VoxDsp.cpp','LICENSE','third_party/JUCE/CMakeLists.txt','third_party/onnxruntime/runtimes/win-x64/native/onnxruntime.dll','resources/silero_vad.onnx'}
 if not required.issubset(set(tracked)):raise SystemExit('Source index is incomplete: '+', '.join(sorted(required-set(tracked))))
+vendor_files={p.relative_to(root).as_posix() for p in (root/'third_party').rglob('*') if p.is_file()}
+missing_vendor=vendor_files-set(tracked)
+if missing_vendor:raise SystemExit('Vendored dependencies omitted from source index: '+', '.join(sorted(missing_vendor)[:10]))
 with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
     for name in sorted(filter(None,tracked)):
         p=root/name
