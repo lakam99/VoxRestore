@@ -12,7 +12,7 @@ public:
     void processBlock(juce::AudioBuffer<float>&,juce::MidiBuffer&) override;
     void processBlockBypassed(juce::AudioBuffer<float>&,juce::MidiBuffer&) override;
     bool isBusesLayoutSupported(const BusesLayout&) const override;
-    juce::AudioProcessorParameter* getBypassParameter() const override{return params.getParameter("bypass");}
+    juce::AudioProcessorParameter* getBypassParameter() const override{return cachedBypass;}
     const juce::String getName() const override{return "VoxRestore";}
     bool acceptsMidi() const override{return false;}
     bool producesMidi() const override{return false;}
@@ -52,6 +52,8 @@ private:
     std::shared_ptr<JobState> activeJob;
     std::unique_ptr<juce::ThreadPool> jobs;
     VoxEngine engine;
+    std::array<std::atomic<float>*,7> parameterValues{};
+    juce::AudioProcessorParameter* cachedBypass=nullptr;
     uint64_t appliedRevision=0;
     mutable juce::CriticalSection statusLock;
     juce::String status="LOAD A CLEAN REFERENCE / OR USE FREE RESTORATION";

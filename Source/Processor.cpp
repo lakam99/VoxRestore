@@ -32,11 +32,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout VoxProcessor::layout(){
     result.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"skin",1},"Faceplate",juce::StringArray{"Ivory","Graphite","Walnut"},2));
     return result;
 }
-VoxProcessor::VoxProcessor():AudioProcessor(BusesProperties().withInput("Voice",juce::AudioChannelSet::stereo(),true).withOutput("Restored voice",juce::AudioChannelSet::stereo(),true)),params(*this,nullptr,"VoxRestoreState",layout()),mailbox(std::make_shared<Mailbox>()){}
+VoxProcessor::VoxProcessor():AudioProcessor(BusesProperties().withInput("Voice",juce::AudioChannelSet::stereo(),true).withOutput("Restored voice",juce::AudioChannelSet::stereo(),true)),params(*this,nullptr,"VoxRestoreState",layout()),mailbox(std::make_shared<Mailbox>()){
+    const char* ids[]{"restore","dewater","rebuild","mix","output","reference","bypass"};for(size_t i=0;i<parameterValues.size();++i)parameterValues[i]=params.getRawParameterValue(ids[i]);cachedBypass=params.getParameter("bypass");
+}
 VoxProcessor::~VoxProcessor(){if(activeJob)activeJob->cancel.store(true);if(jobs){auto* pool=jobs.release();deferVoxRestoreCleanup([pool]{pool->removeAllJobs(true,-1);delete pool;});}}
 bool VoxProcessor::isBusesLayoutSupported(const BusesLayout& buses) const {auto out=buses.getMainOutputChannelSet();return buses.getMainInputChannelSet()==out&&(out==juce::AudioChannelSet::mono()||out==juce::AudioChannelSet::stereo());}
 void VoxProcessor::prepareToPlay(double rate,int){engine.prepare(rate,getTotalNumOutputChannels());setLatencySamples(engine.latency());appliedRevision=0;}
-RestoreControls VoxProcessor::controls() const{auto value=[this](const char* id){return params.getRawParameterValue(id)->load();};RestoreControls result;result.restore=value("restore")*.01f;result.dewater=value("dewater")*.01f;result.rebuild=value("rebuild")*.01f;result.mix=value("mix")*.01f;result.outputDb=value("output");result.match=value("reference")>.5f;result.bypass=value("bypass")>.5f;return result;}
+RestoreControls VoxProcessor::controls() const{auto value=[this](size_t index){return parameterValues[index]->load(std::memory_order_relaxed);};RestoreControls result;result.restore=value(0)*.01f;result.dewater=value(1)*.01f;result.rebuild=value(2)*.01f;result.mix=value(3)*.01f;result.outputDb=value(4);result.match=value(5)>.5f;result.bypass=value(6)>.5f;return result;}
 void VoxProcessor::runAudio(juce::AudioBuffer<float>& audio,bool bypass){
     if(appliedRevision!=mailbox->revision.load(std::memory_order_acquire)){const juce::SpinLock::ScopedTryLockType lock(mailbox->lock);if(lock.isLocked()){engine.setReference(mailbox->reference);engine.setSource(mailbox->source);appliedRevision=mailbox->revision.load();}}
     auto settings=controls();settings.bypass|=bypass;engine.process(audio,settings);inputLevel.store(engine.inputMeter());outputLevel.store(engine.outputMeter());repairLevel.store(engine.repairMeter());pitch.store(engine.pitchHz());confidence.store(engine.voicedConfidence());
